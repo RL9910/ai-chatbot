@@ -1,0 +1,30 @@
+
+Banking System Technical Guide
+
+Authentication:
+The banking system uses JWT tokens to authenticate users.
+Each API request must include a valid access token.
+Expired tokens must be rejected by the backend.
+
+Account Transfers:
+Users can transfer money between bank accounts.
+Each transfer must use a database transaction to ensure atomicity.
+If any operation fails, the entire transaction must be rolled back.
+This prevents money from disappearing or being created accidentally.
+
+Event Processing:
+Kafka is used to publish events after successful transfers.
+Other services consume events asynchronously.
+If Kafka is temporarily unavailable, a transactional outbox
+can retain unpublished events until the publisher recovers.
+
+Caching:
+Redis is used to cache frequently accessed information.
+Caching reduces database queries and improves response times.
+Cached information may need to be invalidated when data changes.
+
+Database:
+PostgreSQL stores account balances and transaction history.
+Database indexes can improve query performance.
+Transactions help maintain consistency when multiple operations
+modify related records.
