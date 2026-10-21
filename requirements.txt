@@ -3,3 +3,6 @@ numpy
 pytest
 langchain-text-splitters
 langchain-ollama
+fastapi
+uvicorn[standard]
+httpx

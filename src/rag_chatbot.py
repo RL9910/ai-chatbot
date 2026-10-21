@@ -6,8 +6,8 @@ from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-from document_loader import load_document
-from semantic_search import calculate_similarity
+from src.document_loader import load_document
+from src.semantic_search import calculate_similarity
 
 
 def retrieve_documents(question, chunks, embeddings, embedding_model, top_k=2):
