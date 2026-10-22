@@ -1,9 +1,15 @@
+from time import perf_counter
+
 from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import ChatOllama
 
 from src.document_loader import load_document
-from src.rag_chatbot import retrieve_documents, generate_answer
+from src.rag_chatbot import (
+    retrieve_results,
+    format_context,
+    generate_answer
+)
 
 
 class RAGService:
@@ -30,14 +36,19 @@ class RAGService:
             temperature=0
         )
 
-    def ask(self, question: str) -> str:
+    def ask_with_sources(self, question: str) -> str:
 
-        context = retrieve_documents(
+        start_time = perf_counter()
+
+        sources = retrieve_results(
             question,
             self.chunks,
             self.embeddings,
-            self.embedding_model
+            self.embedding_model,
+            top_k=2
         )
+
+        context = format_context(sources)
 
         answer = generate_answer(
             question,
@@ -45,4 +56,14 @@ class RAGService:
             self.llm
         )
 
-        return answer
+        latency_ms = (perf_counter() - start_time) * 1000
+
+        return {
+            "answer": answer,
+            "sources": sources,
+            "latency" : round(latency_ms, 2)
+        }
+
+    def ask(self, question: str) -> str:
+        result = self.ask_with_sources(question)
+        return result["answer"]

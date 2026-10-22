@@ -40,8 +40,15 @@ class ChatRequest(BaseModel):
 
         return question
 
+class SourceResult(BaseModel):
+    chunk_id: int
+    content: str
+    score: float
+
 class ChatResponse(BaseModel):
     answer: str
+    sources: list[SourceResult]
+    latency_ms: float
 
 def get_rag_service(request: Request) -> RAGService:
     return request.app.state.rag_service
@@ -60,6 +67,6 @@ def chat(
     print("Question received:", request.question)
     print("Service instance:", id(service))
 
-    answer = service.ask(request.question)
+    result = service.ask_with_sources(request.question)
 
-    return ChatResponse(answer=answer)
+    return ChatResponse(**result)

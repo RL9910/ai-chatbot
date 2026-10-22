@@ -9,6 +9,14 @@ from langchain_core.output_parsers import StrOutputParser
 from src.document_loader import load_document
 from src.semantic_search import calculate_similarity
 
+def format_context(results):
+    context = "\n\n".join(
+        f"[Chunk {result['chunk_id']}]\n{result['content']}"
+        for result in results
+    )
+
+    return context
+
 
 def retrieve_documents(question, chunks, embeddings, embedding_model, top_k=2):
     # Convert question into an embedding
@@ -27,6 +35,26 @@ def retrieve_documents(question, chunks, embeddings, embedding_model, top_k=2):
     )
 
     return context
+
+
+def retrieve_results(question, chunks, embeddings, embedding_model, top_k=2):
+
+    question_embedding = embedding_model.encode(question)
+
+    scores = calculate_similarity(embeddings, question_embedding)
+
+    top_indices = np.argsort(scores)[::-1][:top_k]
+
+    results = []
+
+    for index in top_indices:
+        results.append({
+            "chunk_id": int(index) + 1,
+            "content": chunks[index],
+            "score": float(scores[index])
+        })
+
+    return results
 
 
 def generate_answer(question, context, llm):

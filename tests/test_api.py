@@ -22,8 +22,18 @@ def test_unknown_endpoint():
     assert response.status_code == 404
 
 class FakeRAGService:
-    def ask(self, question: str) -> str:
-        return "Redis is used for caching. [Chunk 4]"
+    def ask_with_sources(self, question: str) -> dict:
+        return {
+            "answer": "Redis is used for caching. [Chunk 4]",
+            "sources": [
+                {
+                    "chunk_id": 4,
+                    "content": "Redis is used for caching.",
+                    "score": 0.82
+                }
+            ],
+            "latency_ms": 120.5
+        }
 
 
 def test_chat():
@@ -38,9 +48,18 @@ def test_chat():
         )
 
         assert response.status_code == 200
-        assert response.json() == {
-            "answer": "Redis is used for caching. [Chunk 4]"
-        }
+
+        data = response.json()
+
+        assert data["answer"] == (
+            "Redis is used for caching. [Chunk 4]"
+        )
+
+        assert len(data["sources"]) == 1
+        assert data["sources"][0]["chunk_id"] == 4
+        assert data["sources"][0]["score"] == 0.82
+        assert data["latency_ms"] == 120.5
+
     finally:
         app.dependency_overrides.clear()
 
@@ -81,9 +100,14 @@ def test_chat_trims_question():
     received = []
 
     class CapturingRAGService:
-        def ask(self, question: str) -> str:
+        def ask_with_sources(self, question: str) -> dict:
             received.append(question)
-            return "Test answer"
+
+            return {
+                "answer": "Test answer",
+                "sources": [],
+                "latency_ms": 100.0
+            }
 
     app.dependency_overrides[get_rag_service] = (
         lambda: CapturingRAGService()
