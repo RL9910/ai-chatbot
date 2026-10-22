@@ -61,7 +61,7 @@ class RAGService:
         return {
             "answer": answer,
             "sources": sources,
-            "latency" : round(latency_ms, 2)
+            "latency_ms" : round(latency_ms, 2)
         }
 
     def ask(self, question: str) -> str:
